@@ -4,6 +4,7 @@ import (
 	"github.com/kataras/iris"
 	"test/db/user"
 	"github.com/dgrijalva/jwt-go"
+	"fmt"
 )
 
 type UserController struct {
@@ -21,6 +22,23 @@ func generateToken(username string) (string, error) {
 
 	tokenString, err := token.SignedString([]byte("secret"))
 	return tokenString, err
+}
+
+func ValidateToken(token string) (interface{}, error) {
+	jwtDecoded, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte("secret"), nil
+	})
+
+	if claims, ok := jwtDecoded.Claims.(jwt.MapClaims); ok && jwtDecoded.Valid {
+		return claims["username"], nil
+	} else {
+		fmt.Println(err)
+		return "", err
+	}
 }
 
 func (u *UserController) PostRegister() (interface{}, int) {
@@ -56,4 +74,14 @@ func (u *UserController) PostLogin() (interface{}, int) {
 	response := Response{Token: token}
 
 	return response, 200
+}
+
+func (u *UserController) PostAuth() (interface{}, int) {
+	userTokenString := u.Ctx.GetHeader("authorization")
+	token, err := ValidateToken(userTokenString)
+	if err != nil {
+		return "Your token wrong or expired", 401
+	}
+
+	return token, 200
 }
