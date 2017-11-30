@@ -8,8 +8,9 @@ import (
 )
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `db:"username",json:"username"`
+	Password string `db:"password",json:"password"`
+	UserId int `db:"userId"`
 }
 
 type errorUser struct {
@@ -52,7 +53,20 @@ func CreateUser(user User) *errorUser {
 		}
 	}
 
+	return nil
+}
 
+func VerifyUser(user User) *errorUser {
+	var existUser User
+	query := "SELECT * FROM test.users WHERE username = \"" + user.Username + "\""
+	err := db.Con.Get(&existUser, query)
+	if err != nil {
+		fmt.Println(err)
+		return &errorUser{"ERROR", 500}
+	}
+
+	wrongPassword := bcrypt.CompareHashAndPassword([]byte(existUser.Password), []byte(user.Password))
+	if wrongPassword != nil { return &errorUser{"Wrong login or password", 401} }
 
 	return nil
 }

@@ -39,3 +39,21 @@ func (u *UserController) PostRegister() (interface{}, int) {
 
 	return response, 200
 }
+
+func (u *UserController) PostLogin() (interface{}, int) {
+	var existUser user.User
+	u.Ctx.ReadJSON(&existUser)
+
+	err := user.VerifyUser(existUser)
+
+	if err != nil {
+		return err.GetError(), err.GetCode()
+	}
+
+	token, tokenErr := generateToken(existUser.Username)
+	if tokenErr != nil { return tokenErr, 500 }
+
+	response := Response{Token: token}
+
+	return response, 200
+}
