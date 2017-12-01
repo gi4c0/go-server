@@ -5,12 +5,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/go-sql-driver/mysql"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type User struct {
-	Username string `db:"username",json:"username"`
-	Password string `db:"password",json:"password"`
-	UserId int `db:"userId"`
+	Username string
+	Password string
+	UserId int
 }
 
 type errorUser struct {
@@ -30,20 +31,53 @@ func (e *errorUser) GetCode() int {
 	return e.code
 }
 
-func CreateUser(user User) *errorUser {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+func checkError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
 
-	query := "INSERT INTO test.users (username, password) VALUES (:name,:pass)"
-	res, err := db.Con.NamedExec(query, map[string]interface{}{
-		"name": user.Username,
-		"pass": string(hashedPassword),
+func GenerateToken(username string) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": username,
 	})
-	fmt.Print(res)
+
+	tokenString, _ := token.SignedString([]byte("secret"))
+
+	return tokenString
+}
+
+func VerifyToken (tokenString string) bool {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte("secret"), nil
+	})
+
 	if err != nil {
-		me, ok := err.(*mysql.MySQLError)
+		return false
+	}
+
+	if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return true
+	}
+
+	return false
+}
+
+func CreateUser(user User) *errorUser {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	checkError(err)
+
+	stmt, stmtErr := db.Con.Prepare("INSERT INTO test.Users (Username, Password) VALUES (?, ?)")
+	checkError(stmtErr)
+
+	_, resErr := stmt.Exec(user.Username, hashedPassword)
+
+	if resErr != nil {
+		me, ok := resErr.(*mysql.MySQLError)
 		if !ok {
 			return &errorUser{"Something went wrong", 500}
 		}
@@ -58,12 +92,9 @@ func CreateUser(user User) *errorUser {
 
 func VerifyUser(user User) *errorUser {
 	var existUser User
-	query := "SELECT * FROM test.users WHERE username = \"" + user.Username + "\""
-	err := db.Con.Get(&existUser, query)
-	if err != nil {
-		fmt.Println(err)
-		return &errorUser{"ERROR", 500}
-	}
+
+	err := db.Con.QueryRow("SELECT * FROM test.Users WHERE Username = ?", user.Username).Scan(&existUser.UserId, &existUser.Username, &existUser.Password)
+	checkError(err)
 
 	wrongPassword := bcrypt.CompareHashAndPassword([]byte(existUser.Password), []byte(user.Password))
 	if wrongPassword != nil { return &errorUser{"Wrong login or password", 401} }

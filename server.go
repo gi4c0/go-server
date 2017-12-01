@@ -1,20 +1,14 @@
 package main
 
 import (
-	"github.com/kataras/iris"
-	"github.com/kataras/iris/middleware/logger"
 	"test/routes"
 )
 
 
 func main() {
-	app := iris.New()
+	router := routes.SetupRouter()
 
-	app.Use(logger.New())
-
-	app.Controller("/user", new(routes.UserController))
-
-	app.Run(iris.Addr(":8000"))
+	router.Run(":8000")
 }
 
 

@@ -1,13 +1,11 @@
 package db
 
 import (
-	"github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
+	"database/sql"
 )
 
-//import _ "github.com/go-sql-driver/mysql"
-
-var Con, err = sqlx.Connect("mysql", "root:1111@tcp(localhost:3306)/test")
+var Con, err = sql.Open("mysql", "root:1111@tcp(localhost:3306)/test")
 
 func init() {
 	if err != nil {
