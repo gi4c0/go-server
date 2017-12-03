@@ -1,17 +1,19 @@
 package user
 
 import (
-	"test/db"
+	"go-server/db"
 	"golang.org/x/crypto/bcrypt"
 	"github.com/go-sql-driver/mysql"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"database/sql"
 )
 
 type User struct {
 	Username string
 	Password string
 	UserId int
+	Token sql.NullString
 }
 
 type errorUser struct {
@@ -47,7 +49,7 @@ func GenerateToken(username string) string {
 	return tokenString
 }
 
-func VerifyToken (tokenString string) bool {
+func VerifyToken (tokenString string) (bool, interface{}) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -57,14 +59,14 @@ func VerifyToken (tokenString string) bool {
 	})
 
 	if err != nil {
-		return false
+		return false, ""
 	}
 
-	if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return true
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return true, claims["username"]
 	}
 
-	return false
+	return false,""
 }
 
 func CreateUser(user User) *errorUser {
@@ -93,7 +95,7 @@ func CreateUser(user User) *errorUser {
 func VerifyUser(user User) *errorUser {
 	var existUser User
 
-	err := db.Con.QueryRow("SELECT * FROM test.Users WHERE Username = ?", user.Username).Scan(&existUser.UserId, &existUser.Username, &existUser.Password)
+	err := db.Con.QueryRow("SELECT * FROM test.Users WHERE Username = ?", user.Username).Scan(&existUser.UserId, &existUser.Username, &existUser.Password, &existUser.Token)
 	checkError(err)
 
 	wrongPassword := bcrypt.CompareHashAndPassword([]byte(existUser.Password), []byte(user.Password))

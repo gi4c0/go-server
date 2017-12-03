@@ -1,7 +1,7 @@
 package main
 
 import (
-	"test/routes"
+	"go-server/routes"
 )
 
 

@@ -2,7 +2,9 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	"test/db/user"
+	"go-server/db/user"
+	"go-server/db"
+	//"fmt"
 )
 
 func Register (c *gin.Context) {
@@ -47,19 +49,36 @@ func Login (c *gin.Context) {
 	}
 
 	token := user.GenerateToken(existUser.Username)
+	db.Con.Exec("UPDATE test.Users SET Token = ? WHERE Username = ?", token, existUser.Username)
 
 	c.JSON(200, gin.H{"token": token})
 }
 
 func Auth (c *gin.Context) {
 	token := c.GetHeader("authorization")
+	var dbToken string
 
-	validToken := user.VerifyToken(token)
+	validToken, username := user.VerifyToken(token)
+	db.Con.QueryRow("SELECT Token from test.Users WHERE Username = ?", username).Scan(&dbToken)
+
+	if !validToken || token != dbToken {
+		c.JSON(401, gin.H{"message": "Your token has expired"})
+		return
+	}
+
+	c.Status(200)
+}
+
+func Logout(c *gin.Context) {
+	token := c.GetHeader("authorization")
+	validToken, username := user.VerifyToken(token)
 
 	if !validToken {
 		c.JSON(401, gin.H{"message": "Your token has expired"})
 		return
 	}
+
+	db.Con.Exec("UPDATE test.Users SET Token = \"\" WHERE Username = ?", username)
 
 	c.Status(200)
 }

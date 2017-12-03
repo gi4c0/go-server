@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"test/routes/userRouter"
+	"go-server/routes/userRouter"
 )
 
 func SetupRouter() *gin.Engine {
