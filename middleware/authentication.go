@@ -9,7 +9,7 @@ func RequireAuth() gin.HandlerFunc{
 	return func(c *gin.Context) {
 		token := c.GetHeader("authorization")
 
-		validToken := user.VerifyToken(token)
+		validToken, _ := user.VerifyToken(token)
 
 		if !validToken {
 			c.JSON(401, gin.H{"message": "Your token has expired"})
