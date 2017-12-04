@@ -103,3 +103,20 @@ func VerifyUser(user User) *errorUser {
 
 	return nil
 }
+
+func GetUserId (token string) int {
+	validToken, username := VerifyToken(token)
+	fmt.Println(username)
+	if !validToken {
+		return -1
+	}
+
+	var userId int
+	err := db.Con.QueryRow("SELECT UserId From test.Users WHERE Username = ?", username).Scan(&userId)
+	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
+
+	return userId
+}

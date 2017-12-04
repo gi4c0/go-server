@@ -22,7 +22,8 @@ func init() {
 		PRIMARY KEY (UserId),
 		UNIQUE INDEX UserId_UNIQUE (UserId ASC),
 		UNIQUE INDEX Username_UNIQUE (Username ASC)
-  );CREATE TABLE if not exists test.Articles (
+  );
+  CREATE TABLE if not exists test.Articles (
 	  ArticleId INT NOT NULL AUTO_INCREMENT,
 	  Text TEXT NOT NULL,
 	  Title VARCHAR(255) NOT NULL,
@@ -37,6 +38,8 @@ func init() {
 
 
 	_, err := Con.Exec(createTables)
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
