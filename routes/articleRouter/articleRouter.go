@@ -9,6 +9,7 @@ import (
 func SetupRouter (router *gin.Engine) *gin.RouterGroup {
 	articleRouter := router.Group("/article")
 
+	articleRouter.GET("/:page/:count", article.GetArticles)
 	articleRouter.POST("/", middleware.RequireAuth(), article.CreateArticle)
 
 	return articleRouter

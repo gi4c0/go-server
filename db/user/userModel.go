@@ -106,7 +106,6 @@ func VerifyUser(user User) *errorUser {
 
 func GetUserId (token string) int {
 	validToken, username := VerifyToken(token)
-	fmt.Println(username)
 	if !validToken {
 		return -1
 	}
