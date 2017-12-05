@@ -2,24 +2,23 @@ package article
 
 import (
 	"github.com/gin-gonic/gin"
-	"fmt"
 	"strconv"
 	"go-server/db/article"
 	"go-server/db/user"
 )
 
 func CreateArticle(c *gin.Context) {
-	validInput := article.ValidateNewArticle(c)
-	if !validInput { return }
+	validInputError := article.ValidateNewArticle(c)
+	if validInputError != "" {
+		c.JSON(400, gin.H{"message": validInputError})
+		return
+	}
 
-	text := c.PostForm("Text")
-	title := c.PostForm("Title")
 
-	// save image path if provided
-	imageFile, err := c.FormFile("Image")
-	var imagePath = ""
-	if err == nil {
-		imagePath = "public/images/" + imageFile.Filename
+	imagePath, imgErr := article.SaveImage(c)
+	if imgErr {
+		c.JSON(400, gin.H{"message": imagePath})
+		return
 	}
 
 	userId := user.GetUserId(c.GetHeader("authorization"))
@@ -29,8 +28,8 @@ func CreateArticle(c *gin.Context) {
 	}
 
 	newArticle := article.NewArticle{
-		Text: text,
-		Title: title,
+		Text: c.PostForm("Text"),
+		Title: c.PostForm("Title"),
 		UserId: userId,
 		Image: imagePath,
 	}
@@ -39,14 +38,6 @@ func CreateArticle(c *gin.Context) {
 	if !articleCreated {
 		c.JSON(400, gin.H{"message": articleError})
 		return
-	}
-
-	// save image if provided
-	if imagePath != "" {
-		if err := c.SaveUploadedFile(imageFile, imagePath); err != nil {
-			c.String(400, fmt.Sprintf("get form err: %s", err.Error()))
-			return
-		}
 	}
 
 	c.Status(200)
@@ -69,6 +60,52 @@ func GetArticles(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"articles": articles})
+}
 
+func UpdateArticle(c *gin.Context) {
+	validationErr := article.ValidateNewArticle(c)
+	if validationErr != "" {
+		c.JSON(400, gin.H{"message": validationErr})
+		return
+	}
 
+	userId := user.GetUserId(c.GetHeader("authorization"))
+	if userId == -1 {
+		c.JSON(401, gin.H{"message": "Your token has expired"})
+		return
+	}
+
+	articleId, idErr := strconv.Atoi(c.Param("id"))
+	if idErr != nil {
+		c.JSON(400, gin.H{"message": "Article id must be a number"})
+		return
+	}
+
+	imagePath := ""
+	if img := c.PostForm("ImagePath"); img != "" {
+		imagePath = img
+	} else {
+		resp, imgErr := article.SaveImage(c)
+		if imgErr {
+			c.JSON(400, gin.H{"message": resp})
+			return
+		}
+		imagePath = resp
+	}
+
+	newArticle := article.NewArticle{
+		Text: c.PostForm("Text"),
+		Title: c.PostForm("Title"),
+		UserId: userId,
+		ArticleId: articleId,
+		Image: imagePath,
+	}
+
+	articleUpdated, articleError := article.Update(&newArticle)
+	if !articleUpdated {
+		c.JSON(400, gin.H{"message": articleError})
+		return
+	}
+
+	c.Status(200)
 }

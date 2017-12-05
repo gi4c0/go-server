@@ -34,6 +34,18 @@ func init() {
 	  UNIQUE INDEX ArticleID_UNIQUE (ArticleId ASC),
 	  UNIQUE INDEX Title_UNIQUE (Title ASC)
   );
+  CREATE TABLE IF NOT EXISTS test.Comments (
+	CommentId INT NOT NULL AUTO_INCREMENT,
+	ArticleId INT NOT NULL,
+	UserId INT NOT NULL,
+	ParentCommentId INT NULL,
+	Text TEXT NOT NULL,
+	CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (CommentId),
+	UNIQUE INDEX CommentId_UNIQUE (CommentId ASC),
+	UNIQUE INDEX ArticleId_UNIQUE (ArticleId ASC),
+	UNIQUE INDEX ParentCommentId_UNIQUE (ParentCommentId ASC)
+  );
 `
 
 
