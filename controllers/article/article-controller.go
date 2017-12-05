@@ -109,3 +109,19 @@ func UpdateArticle(c *gin.Context) {
 
 	c.Status(200)
 }
+
+func DeleteImage(c *gin.Context) {
+	articleId, idErr := strconv.Atoi(c.Param("id"))
+	if idErr != nil {
+		c.JSON(400, gin.H{"message": "Article id must be a number"})
+		return
+	}
+
+	userId := user.GetUserId(c.GetHeader("authorization"))
+
+	res, success := article.DeleteImage(articleId, userId)
+	if !success {
+		c.JSON(400, gin.H{"message": res})
+		return
+	}
+}

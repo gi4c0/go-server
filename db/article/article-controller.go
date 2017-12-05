@@ -70,13 +70,42 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	return fetchedArticles, ""
 }
 
-func Update (article *NewArticle) (bool, string) { // TODO: Delete images
+func Update (article *NewArticle) (bool, string) {
 	query := "UPDATE test.Articles SET Text = ?, Title = ?, Image = ? WHERE UserId = ? AND ArticleId = ?"
 
-	_, err := db.Con.Exec(query, article.Text, article.Title, article.Image, article.UserId, article.ArticleId)
+	res, err := db.Con.Exec(query, article.Text, article.Title, article.Image, article.UserId, article.ArticleId)
 	if err != nil {
 		return false, err.Error()
 	}
 
+	rowsAffected, rowsErr := res.RowsAffected()
+	if rowsErr != nil {
+		return false, err.Error()
+	}
+
+	if rowsAffected < 1 {
+		return false, "Wrong article id, or you do not have permission for this operation"
+	}
+
 	return true, ""
+}
+
+func DeleteImage (articleId, UserId int) (string, bool) {
+	query := "UPDATE test.Articles SET Image = NULL WHERE ArticleId = ? AND UserId = ?"
+
+	res, err := db.Con.Exec(query, articleId, UserId)
+	if err != nil {
+		return err.Error(), false
+	}
+
+	rowsAffected, rowsErr := res.RowsAffected()
+	if rowsErr != nil {
+		return err.Error(), false
+	}
+
+	if rowsAffected < 1 {
+		return "Wrong article id, or you do not have permission for this operation", false
+	}
+
+	return "", true
 }

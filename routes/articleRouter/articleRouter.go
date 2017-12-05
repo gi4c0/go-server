@@ -14,6 +14,7 @@ func SetupRouter (router *gin.Engine) *gin.RouterGroup {
 	articleRouter.POST("/", middleware.RequireAuth(), article.CreateArticle)
 
 	articleRouter.PATCH("/:id", middleware.RequireAuth(), article.UpdateArticle)
+	articleRouter.DELETE("/image/:id", middleware.RequireAuth(), article.DeleteImage)
 
 	return articleRouter
 }
