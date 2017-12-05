@@ -9,19 +9,17 @@ import (
 )
 
 func CreateArticle(c *gin.Context) {
+	validInput := article.ValidateNewArticle(c)
+	if !validInput { return }
+
 	text := c.PostForm("Text")
 	title := c.PostForm("Title")
 
-	if text == "" || title == "" {
-		c.JSON(400, gin.H{"message": "Not enough data provided"})
-		return
-	}
-
 	// save image path if provided
-	file, err := c.FormFile("Image")
+	imageFile, err := c.FormFile("Image")
 	var imagePath = ""
 	if err == nil {
-		imagePath = "public/images/" + file.Filename
+		imagePath = "public/images/" + imageFile.Filename
 	}
 
 	userId := user.GetUserId(c.GetHeader("authorization"))
@@ -45,7 +43,7 @@ func CreateArticle(c *gin.Context) {
 
 	// save image if provided
 	if imagePath != "" {
-		if err := c.SaveUploadedFile(file, imagePath); err != nil {
+		if err := c.SaveUploadedFile(imageFile, imagePath); err != nil {
 			c.String(400, fmt.Sprintf("get form err: %s", err.Error()))
 			return
 		}
