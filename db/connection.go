@@ -43,8 +43,8 @@ func init() {
 	CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (CommentId),
 	UNIQUE INDEX CommentId_UNIQUE (CommentId ASC),
-	UNIQUE INDEX ArticleId_UNIQUE (ArticleId ASC),
-	UNIQUE INDEX ParentCommentId_UNIQUE (ParentCommentId ASC)
+	INDEX ArticleId_UNIQUE (ArticleId ASC),
+	INDEX ParentCommentId_UNIQUE (ParentCommentId ASC)
   );
 `
 
