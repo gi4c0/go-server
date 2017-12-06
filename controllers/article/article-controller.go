@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"go-server/db/article"
-	"go-server/db/user"
 )
 
 func CreateArticle(c *gin.Context) {
@@ -21,11 +20,7 @@ func CreateArticle(c *gin.Context) {
 		return
 	}
 
-	userId := user.GetUserId(c.GetHeader("authorization"))
-	if userId == -1 {
-		c.JSON(401, gin.H{"message": "Your token has expired"})
-		return
-	}
+	userId := c.MustGet("userId").(int)
 
 	newArticle := article.NewArticle{
 		Text: c.PostForm("Text"),
@@ -69,11 +64,7 @@ func UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	userId := user.GetUserId(c.GetHeader("authorization"))
-	if userId == -1 {
-		c.JSON(401, gin.H{"message": "Your token has expired"})
-		return
-	}
+	userId := c.MustGet("userId").(int)
 
 	articleId, idErr := strconv.Atoi(c.Param("id"))
 	if idErr != nil {
@@ -117,7 +108,7 @@ func DeleteImage(c *gin.Context) {
 		return
 	}
 
-	userId := user.GetUserId(c.GetHeader("authorization"))
+	userId := c.MustGet("userId").(int)
 
 	res, success := article.DeleteImage(articleId, userId)
 	if !success {

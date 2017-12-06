@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"fmt"
 	"strconv"
-	"go-server/db/user"
 )
 
 const commentTextLength = 10
@@ -24,7 +23,7 @@ func ParseAndValidateNewComment (c *gin.Context) (NewComment, bool) {
 		return comment, false
 	}
 
-	comment.UserId = user.GetUserId(c.GetHeader("authorization"))
+	comment.UserId = c.MustGet("userId").(int)
 
 	articleId, idErr := strconv.Atoi(c.Param("articleId"))
 	if idErr != nil {
