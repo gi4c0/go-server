@@ -12,11 +12,14 @@ func SetupRouter (router *gin.Engine) {
 	commentRouter := articleRouter.Group("/comments")
 
 	// Article Router
-	articleRouter.GET("/:page/:count", article.GetArticles)
+	articleRouter.GET("/id/:id", article.GetSingleArticle)
+	articleRouter.GET("/list/:page/:count", article.GetArticles)
 
 	articleRouter.POST("/", middleware.RequireAuth(), article.CreateArticle)
 
 	articleRouter.PATCH("/update/:id", middleware.RequireAuth(), article.UpdateArticle)
+	articleRouter.PATCH("/approve/:id", middleware.RequireAdmin(), article.ApproveArticle)
+
 	articleRouter.DELETE("/image/:id", middleware.RequireAuth(), article.DeleteImage)
 
 	// Comment Router

@@ -5,13 +5,15 @@ import (
 	"go-server/db/user"
 	"go-server/db"
 	//"fmt"
+	"fmt"
 )
 
 func Register (c *gin.Context) {
 	var newUSer user.User
-	err := c.BindJSON(&newUSer)
+	err := c.ShouldBindJSON(&newUSer)
 
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": err})
 		return
 	}
@@ -42,13 +44,13 @@ func Login (c *gin.Context) {
 		return
 	}
 
-	existUserErr := user.VerifyUser(existUser)
+	existUserErr := user.VerifyUser(&existUser)
 	if existUserErr != nil {
 		c.JSON(existUserErr.GetCode(), gin.H{"message": existUserErr.GetError()})
 		return
 	}
 
-	token := user.GenerateToken(existUser.Username)
+	token := user.GenerateToken(existUser.Username, existUser.Permission)
 	db.Con.Exec("UPDATE test.Users SET Token = ? WHERE Username = ?", token, existUser.Username)
 
 	c.JSON(200, gin.H{"token": token})

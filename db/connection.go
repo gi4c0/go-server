@@ -19,6 +19,7 @@ func init() {
 		Username VARCHAR(80) NOT NULL,
 		Password VARCHAR(255) NOT NULL,
 		Token VARCHAR(255) NULL,
+		Permission VARCHAR(40) DEFAULT "user",
 		PRIMARY KEY (UserId),
 		UNIQUE INDEX UserId_UNIQUE (UserId ASC),
 		UNIQUE INDEX Username_UNIQUE (Username ASC)
@@ -30,6 +31,7 @@ func init() {
 	  UserId INT NOT NULL,
 	  Approved TINYINT(1) NULL DEFAULT 0,
 	  Image VARCHAR(255) NULL,
+	  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 	  PRIMARY KEY (ArticleId),
 	  UNIQUE INDEX ArticleID_UNIQUE (ArticleId ASC),
 	  UNIQUE INDEX Title_UNIQUE (Title ASC)

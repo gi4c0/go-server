@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"go-server/db"
 	"github.com/go-sql-driver/mysql"
+	"fmt"
 )
 
 type NewArticle struct {
@@ -12,6 +13,7 @@ type NewArticle struct {
 	Title string
 	UserId int
 	Image string
+	CreatedAt string
 }
 
 type FetchedArticle struct {
@@ -21,6 +23,7 @@ type FetchedArticle struct {
 	Username string
 	Approved bool
 	Image string
+	CreatedAt string
 }
 
 func Create (article *NewArticle) (bool, string) {
@@ -42,7 +45,7 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	var fetchedArticles []FetchedArticle
 
 	query := `
-	SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Users.Username
+	SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Users.Username
   	FROM test.Articles
   	JOIN test.Users ON Users.UserId = Articles.UserId
   	LIMIT ?, ?
@@ -56,8 +59,7 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	for res.Next() {
 		var fa FetchedArticle
 		var fetchedImage sql.NullString
-		scanErr := res.Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.Username)
-
+		scanErr := res.Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.CreatedAt, &fa.Username)
 
 		if scanErr != nil {
 			return nil, scanErr.Error()
@@ -68,6 +70,25 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	}
 
 	return fetchedArticles, ""
+}
+
+func GetSingleArticle (articleId int) (FetchedArticle, error) {
+	var fa FetchedArticle
+	var fetchedImage sql.NullString
+
+	query := `
+		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Users.Username
+  		FROM test.Articles
+  		JOIN test.Users ON Users.UserId = Articles.UserId
+  		WHERE ArticleId = ?
+`
+	scanErr := db.Con.QueryRow(query, articleId).Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.CreatedAt, &fa.Username)
+	if scanErr != nil {
+		return fa, scanErr
+	}
+
+	fa.Image = fetchedImage.String
+	return fa, nil
 }
 
 func Update (article *NewArticle) (bool, string) {
@@ -108,4 +129,15 @@ func DeleteImage (articleId, UserId int) (string, bool) {
 	}
 
 	return "", true
+}
+
+func Approve(articleId int) error {
+	query := "UPDATE test.Articles SET Approved = 1 WHERE ArticleId = ?"
+	_, err := db.Con.Exec(query, articleId)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 }

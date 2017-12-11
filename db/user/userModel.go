@@ -14,6 +14,7 @@ type User struct {
 	Password string
 	UserId int
 	Token sql.NullString
+	Permission string
 }
 
 type errorUser struct {
@@ -39,9 +40,10 @@ func checkError(err error) {
 	}
 }
 
-func GenerateToken(username string) string {
+func GenerateToken(username, permission string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
+		"permission": permission,
 	})
 
 	tokenString, _ := token.SignedString([]byte("secret"))
@@ -92,13 +94,13 @@ func CreateUser(user User) *errorUser {
 	return nil
 }
 
-func VerifyUser(user User) *errorUser {
-	var existUser User
+func VerifyUser(user *User) *errorUser {
+	var dbUser User
 
-	err := db.Con.QueryRow("SELECT * FROM test.Users WHERE Username = ?", user.Username).Scan(&existUser.UserId, &existUser.Username, &existUser.Password, &existUser.Token)
+	err := db.Con.QueryRow("SELECT * FROM test.Users WHERE Username = ?", user.Username).Scan(&dbUser.UserId, &dbUser.Username, &dbUser.Password, &dbUser.Token, &user.Permission)
 	checkError(err)
 
-	wrongPassword := bcrypt.CompareHashAndPassword([]byte(existUser.Password), []byte(user.Password))
+	wrongPassword := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 	if wrongPassword != nil { return &errorUser{"Wrong login or password", 401} }
 
 	return nil
@@ -113,6 +115,23 @@ func GetUserId (token string) int {
 	var userId int
 	err := db.Con.QueryRow("SELECT UserId From test.Users WHERE Username = ?", username).Scan(&userId)
 	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
+
+	return userId
+}
+
+func VerifyModerator (token string) int {
+	validToken, username := VerifyToken(token)
+	if !validToken {
+		return -1
+	}
+
+	var userId int
+	var permission string
+	err := db.Con.QueryRow("SELECT UserId, Permission From test.Users WHERE Username = ?", username).Scan(&userId, &permission)
+	if err != nil || (permission != "moderator" && permission != "admin") {
 		fmt.Println(err)
 		return -1
 	}

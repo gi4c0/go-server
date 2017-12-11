@@ -57,6 +57,24 @@ func GetArticles(c *gin.Context) {
 	c.JSON(200, gin.H{"articles": articles})
 }
 
+func GetSingleArticle(c *gin.Context) {
+    id := c.Param("id")
+    articleId, convErr := strconv.Atoi(id)
+    if convErr != nil {
+    	c.JSON(400, gin.H{"message": "Article id should be a function"})
+    	return
+	}
+
+	dbArticle, err := article.GetSingleArticle(articleId)
+	if err != nil {
+		c.JSON(400, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"article": dbArticle})
+	return
+}
+
 func UpdateArticle(c *gin.Context) {
 	validationErr := article.ValidateNewArticle(c)
 	if validationErr != "" {
@@ -115,4 +133,21 @@ func DeleteImage(c *gin.Context) {
 		c.JSON(400, gin.H{"message": res})
 		return
 	}
+}
+
+func ApproveArticle(c *gin.Context) {
+    id := c.Param("id")
+    articleId, err := strconv.Atoi(id)
+    if err != nil {
+    	c.JSON(400, gin.H{"message": "Article id must be a number"})
+    	return
+	}
+
+	approveErr := article.Approve(articleId)
+	if approveErr != nil {
+		c.JSON(500, gin.H{"message": approveErr.Error()})
+		return
+	}
+
+	c.Status(200)
 }
