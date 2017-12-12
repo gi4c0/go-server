@@ -12,5 +12,7 @@ func SetupRouter() *gin.Engine {
 	userRouter.SetupRouter(router)
 	articleRouter.SetupRouter(router)
 
+	router.Static("/public", "./public")
+
 	return router
 }

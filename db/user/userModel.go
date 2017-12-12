@@ -138,3 +138,18 @@ func VerifyModerator (token string) int {
 
 	return userId
 }
+
+func CheckUsername (username string) bool {
+	var exist int
+	err := db.Con.QueryRow("SELECT COUNT(UserId) FROM test.Users WHERE Username = ?", username).Scan(&exist)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	if exist == 1 {
+		return false
+	}
+
+	return true
+}

@@ -12,4 +12,5 @@ func SetupRouter(router *gin.Engine) {
 	userRouter.POST("/login", auth.Login)
 	userRouter.GET("/auth", auth.Auth)
 	userRouter.GET("/logout", auth.Logout)
+	userRouter.POST("/check-username", auth.CheckUsername)
 }

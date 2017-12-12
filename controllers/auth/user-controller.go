@@ -4,36 +4,36 @@ import (
 	"github.com/gin-gonic/gin"
 	"go-server/db/user"
 	"go-server/db"
-	//"fmt"
 	"fmt"
 )
 
 func Register (c *gin.Context) {
-	var newUSer user.User
-	err := c.ShouldBindJSON(&newUSer)
+	var newUser user.User
+	err := c.ShouldBindJSON(&newUser)
 
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{"error": err})
 		return
 	}
-	if newUSer.Username == "" || newUSer.Password == "" {
+	if newUser.Username == "" || newUser.Password == "" {
 		c.JSON(401, gin.H{"message": "Not enough data"})
 		return
 	}
 
-	newUserErr := user.CreateUser(newUSer)
+	newUserErr := user.CreateUser(newUser)
 	if newUserErr != nil {
 		c.JSON(newUserErr.GetCode(), gin.H{"message": newUserErr.GetError()})
 		return
 	}
 
-	c.JSON(200, gin.H{"username": newUSer.Username})
+	token := user.GenerateToken(newUser.Username, "user")
+	c.JSON(200, gin.H{"username": newUser.Username, "token": token})
 }
 
 func Login (c *gin.Context) {
 	var existUser user.User
-	err := c.BindJSON(&existUser)
+	err := c.ShouldBindJSON(&existUser)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Bad format"})
@@ -81,6 +81,27 @@ func Logout(c *gin.Context) {
 	}
 
 	db.Con.Exec("UPDATE test.Users SET Token = \"\" WHERE Username = ?", username)
+
+	c.Status(200)
+}
+
+func CheckUsername(c *gin.Context) {
+	type Data struct {
+		Username string `json:"username"`
+	}
+	var data Data
+
+	err := c.ShouldBindJSON(&data)
+	if err != nil {
+		c.JSON(400, gin.H{"message": err.Error()})
+		return
+	}
+
+	userExist := user.CheckUsername(data.Username)
+	if !userExist {
+		c.JSON(400, gin.H{"message": "This username is already taken"})
+		return
+	}
 
 	c.Status(200)
 }
