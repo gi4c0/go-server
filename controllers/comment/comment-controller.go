@@ -7,8 +7,8 @@ import (
 )
 
 func AddComment(c *gin.Context) {
-	newComment, success := comment.ParseAndValidateNewComment(c)
-	if !success { return }
+	newComment, err := comment.ParseAndValidateNewComment(c)
+	if err { return }
 
 	newComment.Save()
 }

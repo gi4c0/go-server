@@ -9,7 +9,7 @@ import (
 
 func SetupRouter (router *gin.Engine) {
 	articleRouter := router.Group("/article")
-	commentRouter := articleRouter.Group("/comments")
+	commentRouter := articleRouter.Group("/comment")
 
 	// Article Router
 	articleRouter.GET("/id/:id", article.GetSingleArticle)
