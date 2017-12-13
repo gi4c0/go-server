@@ -8,7 +8,9 @@ import (
 
 func AddComment(c *gin.Context) {
 	newComment, err := comment.ParseAndValidateNewComment(c)
-	if err { return }
+	if err {
+		return
+	}
 
 	newComment.Save()
 }
@@ -32,12 +34,12 @@ func DeleteComment(c *gin.Context) {
 }
 
 func UpdateComment(c *gin.Context) {
-    var newComment comment.NewComment
+	var newComment comment.NewComment
 
-    jsonErr := c.BindJSON(&newComment)
-    if jsonErr != nil {
-    	c.JSON(400, gin.H{"message": "Wrong format"})
-    	return
+	jsonErr := c.BindJSON(&newComment)
+	if jsonErr != nil {
+		c.JSON(400, gin.H{"message": "Wrong format"})
+		return
 	}
 
 	commentId, convertErr := strconv.Atoi(c.Param("commentId"))
@@ -54,4 +56,21 @@ func UpdateComment(c *gin.Context) {
 		c.JSON(400, gin.H{"message": updateError})
 		return
 	}
+}
+
+func GetComments(c *gin.Context) {
+	articleId, intErr := strconv.Atoi(c.Param("articleId"))
+	if intErr != nil {
+		c.JSON(400, gin.H{"message": "Article id should be a number"})
+		return
+	}
+
+	comments, err := comment.GetCommentsByArticleId(articleId)
+	if err != nil {
+		c.JSON(400, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"comments": comments})
+	return
 }

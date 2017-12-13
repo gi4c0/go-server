@@ -1,16 +1,18 @@
 package comment
 
-import  (
+import (
+	"fmt"
 	"go-server/db"
 )
 
 type NewComment struct {
-	CommentId int
-	ArticleId int
-	UserId int
+	CommentId       int
+	ArticleId       int
+	UserId          int
 	ParentCommentId int
-	Text string
-	CreatedAt string
+	Text            string
+	CreatedAt       string
+	Username 		string
 }
 
 func (comment *NewComment) Save() {
@@ -45,4 +47,29 @@ func DeleteComment(commentId, userId int) string {
 	}
 
 	return ""
+}
+
+func GetCommentsByArticleId(articleId int) ([]NewComment, error) {
+	var comments []NewComment
+	query := `
+		SELECT CommentId, ArticleId, ParentCommentId, Text, CreatedAt, Username
+
+		FROM test.Comments JOIN test.Users ON Comments.UserId = Users.UserId WHERE ArticleId = ?`
+	res, err := db.Con.Query(query, articleId)
+	if err != nil {
+		return comments, err
+	}
+
+	for res.Next() {
+		var comment NewComment
+		scanErr := res.Scan(&comment.CommentId, &comment.ArticleId, &comment.ParentCommentId, &comment.Text, &comment.CreatedAt, &comment.Username)
+		if scanErr != nil {
+			fmt.Println(scanErr)
+			return comments, scanErr
+		}
+
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
 }
