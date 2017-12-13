@@ -31,6 +31,7 @@ func init() {
 	  UserId INT NOT NULL,
 	  Approved TINYINT(1) NULL DEFAULT 0,
 	  Image VARCHAR(255) NULL,
+	  CategoryId INT NOT NULL,
 	  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 	  PRIMARY KEY (ArticleId),
 	  UNIQUE INDEX ArticleID_UNIQUE (ArticleId ASC),
@@ -48,8 +49,14 @@ func init() {
 	INDEX ArticleId_UNIQUE (ArticleId ASC),
 	INDEX ParentCommentId_UNIQUE (ParentCommentId ASC)
   );
+  CREATE TABLE IF NOT EXISTS test.Categories (
+  	CategoryId INT NOT NULL AUTO_INCREMENT,
+  	Name VARCHAR(40) NOT NULL,
+  	PRIMARY KEY (CategoryId),
+  	UNIQUE INDEX CategoryId_UNIQUE (CategoryId ASC),
+  	UNIQUE (Name)
+  );
 `
-
 
 	_, err := Con.Exec(createTables)
 	if err != nil {

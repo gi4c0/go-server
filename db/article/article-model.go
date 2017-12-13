@@ -27,7 +27,7 @@ type FetchedArticle struct {
 }
 
 func Create (article *NewArticle) (bool, string) {
-	query := "INSERT INTO test.Articles (Text, Title, Image, UserId) VALUES (?, ?, ?, ?)"
+	query := `INSERT INTO test.Articles (Text, Title, Image, UserId, CategoryId) VALUES (?, ?, ?, ?, 3)`
 
 	_, err := db.Con.Exec(query, article.Text, article.Title, article.Image, article.UserId)
 	if err != nil {
@@ -45,10 +45,11 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	var fetchedArticles []FetchedArticle
 
 	query := `
-	SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Users.Username
-  	FROM test.Articles
-  	JOIN test.Users ON Users.UserId = Articles.UserId
-  	LIMIT ?, ?
+		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Users.Username
+		FROM test.Articles
+		JOIN test.Users ON Users.UserId = Articles.UserId
+		WHERE Approved = 1
+		LIMIT ?, ?
   	`
 
 	res, err := db.Con.Query(query, skip, limit)
