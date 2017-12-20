@@ -73,6 +73,10 @@ func Auth (c *gin.Context) {
 
 func Logout(c *gin.Context) {
 	token := c.GetHeader("authorization")
+	if token == "" {
+		c.JSON(400, gin.H{"message": "Token not provided"})
+		return
+	}
 	validToken, username := user.VerifyToken(token)
 
 	if !validToken {

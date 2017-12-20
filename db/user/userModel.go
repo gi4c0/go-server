@@ -61,6 +61,7 @@ func VerifyToken (tokenString string) (bool, interface{}) {
 	})
 
 	if err != nil {
+		fmt.Println(err)
 		return false, ""
 	}
 
