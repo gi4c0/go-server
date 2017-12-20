@@ -31,30 +31,28 @@ func init() {
 	  UserId INT NOT NULL,
 	  Approved TINYINT(1) NULL DEFAULT 0,
 	  Image VARCHAR(255) NULL,
-	  CategoryId INT NOT NULL,
+	  Name VARCHAR(40) NOT NULL,
 	  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 	  PRIMARY KEY (ArticleId),
 	  UNIQUE INDEX ArticleID_UNIQUE (ArticleId ASC),
 	  UNIQUE INDEX Title_UNIQUE (Title ASC)
   );
   CREATE TABLE IF NOT EXISTS test.Comments (
-	CommentId INT NOT NULL AUTO_INCREMENT,
-	ArticleId INT NOT NULL,
-	UserId INT NOT NULL,
-	ParentCommentId INT NULL,
-	Text TEXT NOT NULL,
-	CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (CommentId),
-	UNIQUE INDEX CommentId_UNIQUE (CommentId ASC),
-	INDEX ArticleId_UNIQUE (ArticleId ASC),
-	INDEX ParentCommentId_UNIQUE (ParentCommentId ASC)
+		CommentId INT NOT NULL AUTO_INCREMENT,
+		ArticleId INT NOT NULL,
+		UserId INT NOT NULL,
+		ParentCommentId INT NULL,
+		Text TEXT NOT NULL,
+		CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (CommentId),
+		UNIQUE INDEX CommentId_UNIQUE (CommentId ASC),
+		INDEX ArticleId_UNIQUE (ArticleId ASC),
+		INDEX ParentCommentId_UNIQUE (ParentCommentId ASC)
   );
   CREATE TABLE IF NOT EXISTS test.Categories (
-  	CategoryId INT NOT NULL AUTO_INCREMENT,
   	Name VARCHAR(40) NOT NULL,
-  	PRIMARY KEY (CategoryId),
-  	UNIQUE INDEX CategoryId_UNIQUE (CategoryId ASC),
-  	UNIQUE (Name)
+  	PRIMARY KEY (Name),
+  	UNIQUE INDEX Name_UNIQUE(Name ASC)
   );
 `
 

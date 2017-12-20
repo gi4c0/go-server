@@ -14,6 +14,7 @@ type NewArticle struct {
 	UserId int
 	Image string
 	CreatedAt string
+	Category int
 }
 
 type FetchedArticle struct {
@@ -24,6 +25,7 @@ type FetchedArticle struct {
 	Approved bool
 	Image string
 	CreatedAt string
+	Category int
 }
 
 func Create (article *NewArticle) (bool, string) {
