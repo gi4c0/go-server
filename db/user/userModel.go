@@ -34,12 +34,6 @@ func (e *errorUser) GetCode() int {
 	return e.code
 }
 
-func checkError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func GenerateToken(username, permission string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
@@ -74,10 +68,15 @@ func VerifyToken (tokenString string) (bool, interface{}) {
 
 func CreateUser(user User) *errorUser {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	checkError(err)
+	if err != nil {
+		fmt.Println(err)
+		return &errorUser{err.Error(), 500}
+	}
 
 	stmt, stmtErr := db.Con.Prepare("INSERT INTO test.Users (Username, Password) VALUES (?, ?)")
-	checkError(stmtErr)
+	if stmtErr != nil {
+		return &errorUser{stmtErr.Error(), 500}
+	}
 
 	_, resErr := stmt.Exec(user.Username, hashedPassword)
 
@@ -99,7 +98,13 @@ func VerifyUser(user *User) *errorUser {
 	var dbUser User
 
 	err := db.Con.QueryRow("SELECT * FROM test.Users WHERE Username = ?", user.Username).Scan(&dbUser.UserId, &dbUser.Username, &dbUser.Password, &dbUser.Token, &user.Permission)
-	checkError(err)
+	if err != nil {
+		fmt.Println(err)
+		if err == sql.ErrNoRows {
+			return &errorUser{"Wrong username", 401}
+		}
+		return &errorUser{err.Error(), 500}
+	}
 
 	wrongPassword := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 	if wrongPassword != nil { return &errorUser{"Wrong login or password", 401} }

@@ -14,7 +14,7 @@ type NewArticle struct {
 	UserId int
 	Image string
 	CreatedAt string
-	Category int
+	Category string
 }
 
 type FetchedArticle struct {
@@ -25,11 +25,11 @@ type FetchedArticle struct {
 	Approved bool
 	Image string
 	CreatedAt string
-	Category int
+	Category string
 }
 
 func Create (article *NewArticle) (bool, string) {
-	query := `INSERT INTO test.Articles (Text, Title, Image, UserId, CategoryId) VALUES (?, ?, ?, ?, 3)`
+	query := `INSERT INTO test.Articles (Text, Title, Image, Category, UserId) VALUES (?, ?, ?, "New", ?)`
 
 	_, err := db.Con.Exec(query, article.Text, article.Title, article.Image, article.UserId)
 	if err != nil {
@@ -47,7 +47,7 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	var fetchedArticles []FetchedArticle
 
 	query := `
-		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Users.Username
+		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Articles.Category, Users.Username
 		FROM test.Articles
 		JOIN test.Users ON Users.UserId = Articles.UserId
 		WHERE Approved = 1
@@ -62,7 +62,7 @@ func GetAll (skip int, limit int) ([]FetchedArticle, string) {
 	for res.Next() {
 		var fa FetchedArticle
 		var fetchedImage sql.NullString
-		scanErr := res.Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.CreatedAt, &fa.Username)
+		scanErr := res.Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.CreatedAt, &fa.Category, &fa.Username)
 
 		if scanErr != nil {
 			return nil, scanErr.Error()

@@ -31,9 +31,8 @@ func init() {
 	  UserId INT NOT NULL,
 	  Approved TINYINT(1) NULL DEFAULT 0,
 	  Image VARCHAR(255) NULL,
-	  Name VARCHAR(40) NOT NULL,
 	  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-	  Category TEXT NOT NULL,
+	  Category VARCHAR(40) NOT NULL,
 	  PRIMARY KEY (ArticleId),
 	  UNIQUE INDEX ArticleID_UNIQUE (ArticleId ASC),
 	  UNIQUE INDEX Title_UNIQUE (Title ASC)
