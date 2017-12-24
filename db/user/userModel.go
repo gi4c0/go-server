@@ -128,7 +128,7 @@ func GetUserId (token string) int {
 	return userId
 }
 
-func VerifyModerator (token string) int {
+func VerifyPermission(token string, perm string) int {
 	validToken, username := VerifyToken(token)
 	if !validToken {
 		return -1
@@ -137,10 +137,14 @@ func VerifyModerator (token string) int {
 	var userId int
 	var permission string
 	err := db.Con.QueryRow("SELECT UserId, Permission From test.Users WHERE Username = ?", username).Scan(&userId, &permission)
-	if err != nil || (permission != "moderator" && permission != "admin") {
+	if err != nil {
 		fmt.Println(err)
 		return -1
 	}
+
+  if permission != perm && permission != "admin" {
+    return -1
+  }
 
 	return userId
 }
@@ -159,3 +163,4 @@ func CheckUsername (username string) bool {
 
 	return true
 }
+

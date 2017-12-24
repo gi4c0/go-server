@@ -31,3 +31,14 @@ func GetAll() ([]string, error) {
 
 	return categories, nil
 }
+
+func Change(oldName, newName string) error {
+  _, err := db.Con.Exec("UPDATE test.Categories SET Name = ? WHERE Name = ?", newName, oldName)
+  fmt.Println(oldName, newName)
+  if err != nil {
+    fmt.Println(err)
+    return err
+  }
+
+  return nil
+}
