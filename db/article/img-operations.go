@@ -3,6 +3,8 @@ package article
 import (
 	"github.com/gin-gonic/gin"
 	"fmt"
+  "time"
+  "strconv"
 )
 
 func SaveImage (c *gin.Context) (string, bool) {
@@ -12,7 +14,9 @@ func SaveImage (c *gin.Context) (string, bool) {
 		return "", false
 	}
 
-	imagePath := "public/images/" + imageFile.Filename
+  timeStr := strconv.FormatInt(time.Now().Unix(), 10)
+
+	imagePath := "public/images/" + imageFile.Filename + "-" + timeStr
 
 	if saveErr := c.SaveUploadedFile(imageFile, imagePath); saveErr != nil {
 		//c.String(400, fmt.Sprintf("get form err: %s", err.Error()))
