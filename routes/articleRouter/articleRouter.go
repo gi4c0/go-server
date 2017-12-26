@@ -14,6 +14,7 @@ func SetupRouter (router *gin.Engine) {
 	// Article Router
 	articleRouter.GET("/id/:id", article.GetSingleArticle)
 	articleRouter.GET("/list/:page/:count", article.GetArticles)
+  articleRouter.GET("/unapproved", middleware.RequireAdmin(), article.GetUnapproved)
 
 	articleRouter.POST("/", middleware.RequireAuth(), article.CreateArticle)
 

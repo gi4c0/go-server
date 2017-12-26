@@ -151,3 +151,14 @@ func ApproveArticle(c *gin.Context) {
 
 	c.Status(200)
 }
+
+func GetUnapproved(c *gin.Context) {
+  articles, err := article.GetUnapproved()
+  if err != nil {
+    c.JSON(500, gin.H{"message": err.Error()})
+    return
+  }
+
+  c.JSON(200, gin.H{"articles": articles})
+  return
+}

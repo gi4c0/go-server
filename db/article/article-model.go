@@ -28,6 +28,11 @@ type FetchedArticle struct {
 	Category string
 }
 
+type ArticlePreview struct {
+  ArticleId int
+  Title string
+}
+
 func Create (article *NewArticle) (bool, string) {
 	query := `INSERT INTO test.Articles (Text, Title, Image, Category, UserId) VALUES (?, ?, ?, "New", ?)`
 
@@ -144,3 +149,26 @@ func Approve(articleId int) error {
 
 	return nil
 }
+
+func GetUnapproved() ([]ArticlePreview, error) {
+  var articles []ArticlePreview
+  res, err := db.Con.Query("SELECT ArticleId, Title FROM test.Articles WHERE Approved = 0")
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  for res.Next() {
+    var article ArticlePreview
+
+    scanErr := res.Scan(&article.ArticleId, &article.Title)
+    if scanErr != nil {
+      fmt.Println(scanErr)
+      return articles, scanErr
+    }
+
+    articles = append(articles, article)
+  }
+
+  return articles, nil
+}
+
