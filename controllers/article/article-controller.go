@@ -162,3 +162,15 @@ func GetUnapproved(c *gin.Context) {
   c.JSON(200, gin.H{"articles": articles})
   return
 }
+
+func GetUserArticlesPreview (c *gin.Context) {
+  userId := c.MustGet("userId").(int)
+  articles, err := article.UserArticles(userId)
+  if err != nil {
+    c.JSON(500, gin.H{"message": err.Error()})
+    return
+  }
+
+  c.JSON(200, gin.H{"articles": articles})
+  return
+}

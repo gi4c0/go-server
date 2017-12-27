@@ -16,7 +16,7 @@ func SaveImage (c *gin.Context) (string, bool) {
 
   timeStr := strconv.FormatInt(time.Now().Unix(), 10)
 
-	imagePath := "public/images/" + imageFile.Filename + "-" + timeStr
+	imagePath := "/public/images/" + imageFile.Filename + "-" + timeStr
 
 	if saveErr := c.SaveUploadedFile(imageFile, imagePath); saveErr != nil {
 		//c.String(400, fmt.Sprintf("get form err: %s", err.Error()))

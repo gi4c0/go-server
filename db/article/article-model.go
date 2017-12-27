@@ -31,6 +31,7 @@ type FetchedArticle struct {
 type ArticlePreview struct {
   ArticleId int
   Title string
+  Approved bool
 }
 
 func Create (article *NewArticle) (bool, string) {
@@ -172,3 +173,26 @@ func GetUnapproved() ([]ArticlePreview, error) {
   return articles, nil
 }
 
+func UserArticles (userId int) ([]ArticlePreview, error) {
+  var articles []ArticlePreview
+
+  res, dbErr:= db.Con.Query("SELECT ArticleId, Title, Approved FROM test.Articles WHERE UserId = ?", userId)
+  if dbErr != nil {
+    fmt.Println(dbErr)
+    return articles, dbErr
+  }
+
+  for res.Next() {
+    var article ArticlePreview
+
+    scanErr := res.Scan(&article.ArticleId, &article.Title, &article.Approved)
+    if scanErr != nil {
+      fmt.Println(scanErr)
+      return articles, scanErr
+    }
+
+    articles = append(articles, article)
+  }
+
+  return articles, nil
+}
