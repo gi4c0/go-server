@@ -17,6 +17,7 @@ func AddComment(c *gin.Context) {
 
 func DeleteComment(c *gin.Context) {
 	userId := c.MustGet("userId").(int)
+  userPermission := c.MustGet("permission").(string)
 
 	commentId, parseErr := strconv.Atoi(c.Param("commentId"))
 	if parseErr != nil {
@@ -24,9 +25,9 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	deleteCommentErr := comment.DeleteComment(commentId, userId)
-	if deleteCommentErr != "" {
-		c.JSON(400, gin.H{"message": deleteCommentErr})
+	deleteCommentErr := comment.Delete(commentId, userId, userPermission)
+	if deleteCommentErr != nil {
+		c.JSON(400, gin.H{"message": deleteCommentErr.Error()})
 		return
 	}
 

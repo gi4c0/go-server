@@ -19,6 +19,10 @@ func GetAll(c *gin.Context) {
 func ChangeCategoryName (c *gin.Context) {
   newCategoryName := c.Param("new")
   oldCategoryName := c.Param("old")
+  if newCategoryName == oldCategoryName {
+    c.Status(200)
+    return
+  }
 
   err := category.Change(oldCategoryName, newCategoryName)
   if err != nil {

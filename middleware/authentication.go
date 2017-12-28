@@ -24,6 +24,7 @@ func RequireAuth() gin.HandlerFunc {
 
 		userId := user.GetUserId(token)
 		c.Set("userId", userId)
+    c.Set("permission", "user")
 	}
 }
 
@@ -52,6 +53,7 @@ func RequireModerator() gin.HandlerFunc {
 		}
 
 		c.Set("userId", userId)
+    c.Set("permission", "moderator")
 	}
 }
 
@@ -80,5 +82,6 @@ func RequireAdmin() gin.HandlerFunc {
 		}
 
 		c.Set("userId", userId)
+    c.Set("permission", "admin")
 	}
 }

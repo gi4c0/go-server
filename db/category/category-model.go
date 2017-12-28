@@ -33,11 +33,16 @@ func GetAll() ([]string, error) {
 }
 
 func Change(oldName, newName string) error {
-  _, err := db.Con.Exec("UPDATE test.Categories SET Name = ? WHERE Name = ?", newName, oldName)
-  fmt.Println(oldName, newName)
-  if err != nil {
-    fmt.Println(err)
-    return err
+  _, updateCategoryErr := db.Con.Exec("UPDATE test.Categories SET Name = ? WHERE Name = ?", newName, oldName)
+  if updateCategoryErr != nil {
+    fmt.Println(updateCategoryErr)
+    return updateCategoryErr
+  }
+
+  _, updateArticleErr := db.Con.Exec("UPDATE test.Articles SET Category = ? WHERE Category = ?", newName, oldName)
+  if updateArticleErr != nil {
+    fmt.Println(updateArticleErr)
+    return updateArticleErr
   }
 
   return nil

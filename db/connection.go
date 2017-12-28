@@ -43,6 +43,7 @@ func init() {
 		UserId INT NOT NULL,
 		ParentCommentId INT NULL,
 		Text TEXT NOT NULL,
+    Deleted TINYINT(1) DEFAULT 0,
 		CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 		PRIMARY KEY (CommentId),
 		UNIQUE INDEX CommentId_UNIQUE (CommentId ASC),
