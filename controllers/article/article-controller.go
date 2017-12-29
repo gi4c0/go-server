@@ -15,8 +15,8 @@ func CreateArticle(c *gin.Context) {
 
 
 	imagePath, imgErr := article.SaveImage(c)
-	if imgErr {
-		c.JSON(400, gin.H{"message": imagePath})
+	if imgErr != nil {
+		c.JSON(400, gin.H{"message": imgErr.Error()})
 		return
 	}
 
@@ -95,8 +95,8 @@ func UpdateArticle(c *gin.Context) {
 		imagePath = img
 	} else {
 		resp, imgErr := article.SaveImage(c)
-		if imgErr {
-			c.JSON(400, gin.H{"message": resp})
+		if imgErr != nil {
+			c.JSON(400, gin.H{"message": imgErr.Error()})
 			return
 		}
 		imagePath = resp
