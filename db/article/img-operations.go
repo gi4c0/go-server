@@ -11,7 +11,7 @@ func SaveImage (c *gin.Context) (string, error) {
 	imageFile, err := c.FormFile("ImageFile")
 	if err != nil {
 		fmt.Println(err)
-		return "", err
+		return "", nil
 	}
 
   timeStr := strconv.FormatInt(time.Now().Unix(), 10)
