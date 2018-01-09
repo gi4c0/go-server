@@ -1,4 +1,4 @@
-package comment
+package userComment
 
 import (
 	"github.com/gin-gonic/gin"
