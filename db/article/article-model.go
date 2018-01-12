@@ -1,7 +1,6 @@
 package article
 
 import (
-	"database/sql"
 	"go-server/db"
 	"github.com/go-sql-driver/mysql"
 	"fmt"
@@ -12,7 +11,6 @@ type NewArticle struct {
 	Text string
 	Title string
 	UserId int
-	Image string
 	CreatedAt string
 	Category string
 }
@@ -23,7 +21,6 @@ type FetchedArticle struct {
 	Title string
 	Username string
 	Approved bool
-	Image string
 	CreatedAt string
 	Category string
 }
@@ -35,9 +32,9 @@ type ArticlePreview struct {
 }
 
 func Create (article *NewArticle) (bool, string) {
-	query := `INSERT INTO test.Articles (Text, Title, Image, Category, UserId) VALUES (?, ?, ?, "New", ?)`
+	query := `INSERT INTO test.Articles (Text, Title, Category, UserId) VALUES (?, ?, "New", ?)`
 
-	_, err := db.Con.Exec(query, article.Text, article.Title, article.Image, article.UserId)
+	_, err := db.Con.Exec(query, article.Text, article.Title, article.UserId)
 	if err != nil {
 		me, ok := err.(*mysql.MySQLError)
 		if ok && me.Number == 1062 {
@@ -49,61 +46,57 @@ func Create (article *NewArticle) (bool, string) {
 	return true, ""
 }
 
-func GetAll (skip int, limit int) ([]FetchedArticle, string) {
+func GetAll (skip int, limit int) ([]FetchedArticle, error) {
 	var fetchedArticles []FetchedArticle
 
 	query := `
-		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Articles.Category, Users.Username
+		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.CreatedAt, Articles.Category, Users.Username
 		FROM test.Articles
 		JOIN test.Users ON Users.UserId = Articles.UserId
 		WHERE Approved = 1
 		LIMIT ?, ?
-  	`
+ 	`
 
 	res, err := db.Con.Query(query, skip, limit)
 	if err != nil {
-		return nil, err.Error()
+		return nil, err
 	}
 
 	for res.Next() {
 		var fa FetchedArticle
-		var fetchedImage sql.NullString
-		scanErr := res.Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.CreatedAt, &fa.Category, &fa.Username)
+		scanErr := res.Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fa.CreatedAt, &fa.Category, &fa.Username)
 
 		if scanErr != nil {
-			return nil, scanErr.Error()
+			return nil, scanErr
 		}
 
-		fa.Image = fetchedImage.String
 		fetchedArticles = append(fetchedArticles, fa)
 	}
 
-	return fetchedArticles, ""
+	return fetchedArticles, nil
 }
 
 func GetSingleArticle (articleId int) (FetchedArticle, error) {
 	var fa FetchedArticle
-	var fetchedImage sql.NullString
 
 	query := `
-		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.Image, Articles.CreatedAt, Users.Username
+		SELECT Articles.ArticleId, Articles.Text, Articles.Title, Articles.Approved, Articles.CreatedAt, Users.Username
   		FROM test.Articles
   		JOIN test.Users ON Users.UserId = Articles.UserId
   		WHERE ArticleId = ?
-`
-	scanErr := db.Con.QueryRow(query, articleId).Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fetchedImage, &fa.CreatedAt, &fa.Username)
+  `
+	scanErr := db.Con.QueryRow(query, articleId).Scan(&fa.ArticleId, &fa.Text, &fa.Title, &fa.Approved, &fa.CreatedAt, &fa.Username)
 	if scanErr != nil {
 		return fa, scanErr
 	}
 
-	fa.Image = fetchedImage.String
 	return fa, nil
 }
 
 func Update (article *NewArticle) (bool, string) {
-	query := "UPDATE test.Articles SET Text = ?, Title = ?, Image = ? WHERE UserId = ? AND ArticleId = ?"
+	query := "UPDATE test.Articles SET Text = ?, Title = ?, WHERE UserId = ? AND ArticleId = ?"
 
-	res, err := db.Con.Exec(query, article.Text, article.Title, article.Image, article.UserId, article.ArticleId)
+	res, err := db.Con.Exec(query, article.Text, article.Title, article.UserId, article.ArticleId)
 	if err != nil {
 		return false, err.Error()
 	}
@@ -118,26 +111,6 @@ func Update (article *NewArticle) (bool, string) {
 	}
 
 	return true, ""
-}
-
-func DeleteImage (articleId, UserId int) (string, bool) {
-	query := "UPDATE test.Articles SET Image = NULL WHERE ArticleId = ? AND UserId = ?"
-
-	res, err := db.Con.Exec(query, articleId, UserId)
-	if err != nil {
-		return err.Error(), false
-	}
-
-	rowsAffected, rowsErr := res.RowsAffected()
-	if rowsErr != nil {
-		return err.Error(), false
-	}
-
-	if rowsAffected < 1 {
-		return "Wrong article id, or you do not have permission for this operation", false
-	}
-
-	return "", true
 }
 
 func Approve(articleId int) error {

@@ -4,136 +4,132 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"go-server/db/article"
+  "fmt"
 )
 
+type reqArticle struct {
+  Title string
+  Text string
+}
+
 func CreateArticle(c *gin.Context) {
-	validInputError := article.ValidateNewArticle(c)
-	if validInputError != "" {
-		c.JSON(400, gin.H{"message": validInputError})
-		return
-	}
+  // validInputError := article.ValidateNewArticle(c)
+  // if validInputError != nil {
+  //   c.JSON(400, gin.H{"message": validInputError.Error()})
+  //   return
+  // }
 
+  userId := c.MustGet("userId").(int)
 
-	imagePath, imgErr := article.SaveImage(c)
-	if imgErr != nil {
-		c.JSON(400, gin.H{"message": imgErr.Error()})
-		return
-	}
+  var reqData reqArticle
+  jsonErr := c.ShouldBindJSON(&reqData)
+  if jsonErr != nil {
+    fmt.Println(jsonErr)
+    c.JSON(400, gin.H{"message": jsonErr.Error()})
+    return
+  }
 
-	userId := c.MustGet("userId").(int)
+  newArticle := article.NewArticle{
+    Text: reqData.Text,
+    Title: reqData.Title,
+    UserId: userId,
+  }
 
-	newArticle := article.NewArticle{
-		Text: c.PostForm("Text"),
-		Title: c.PostForm("Title"),
-		UserId: userId,
-		Image: imagePath,
-	}
+  articleCreated, articleError := article.Create(&newArticle)
+  if !articleCreated {
+    c.JSON(400, gin.H{"message": articleError})
+    return
+  }
 
-	articleCreated, articleError := article.Create(&newArticle)
-	if !articleCreated {
-		c.JSON(400, gin.H{"message": articleError})
-		return
-	}
-
-	c.Status(200)
+  c.Status(200)
 }
 
 func GetArticles(c *gin.Context) {
-	page, pageErr := strconv.Atoi(c.Param("page"))
-	count, countErr := strconv.Atoi(c.Param("count"))
-	if pageErr != nil || countErr != nil {
-		c.JSON(400, gin.H{"message": "page and count must be numbers"})
-		return
-	}
+  page, pageErr := strconv.Atoi(c.Param("page"))
+  count, countErr := strconv.Atoi(c.Param("count"))
+  if pageErr != nil || countErr != nil {
+    c.JSON(400, gin.H{"message": "page and count must be numbers"})
+    return
+  }
 
-	skip := (page - 1) * count
+  skip := (page - 1) * count
 
-	articles, err := article.GetAll(skip, count)
-	if err != "" {
-		c.JSON(500, gin.H{"message": err})
-		return
-	}
+  articles, err := article.GetAll(skip, count)
+  if err != nil {
+    c.JSON(500, gin.H{"message": err.Error()})
+    return
+  }
 
-	c.JSON(200, gin.H{"articles": articles})
+  c.JSON(200, gin.H{"articles": articles})
 }
 
 func GetSingleArticle(c *gin.Context) {
-    id := c.Param("id")
-    articleId, convErr := strconv.Atoi(id)
-    if convErr != nil {
-    	c.JSON(400, gin.H{"message": "Article id should be a function"})
-    	return
-	}
+  id := c.Param("id")
+  articleId, convErr := strconv.Atoi(id)
+  if convErr != nil {
+    c.JSON(400, gin.H{"message": "Article id should be a function"})
+    return
+  }
 
-	dbArticle, err := article.GetSingleArticle(articleId)
-	if err != nil {
-		c.JSON(400, gin.H{"message": err.Error()})
-		return
-	}
+  dbArticle, err := article.GetSingleArticle(articleId)
+  if err != nil {
+    c.JSON(400, gin.H{"message": err.Error()})
+    return
+  }
 
-	c.JSON(200, gin.H{"article": dbArticle})
-	return
+  c.JSON(200, gin.H{"article": dbArticle})
+  return
 }
 
 func UpdateArticle(c *gin.Context) {
-	validationErr := article.ValidateNewArticle(c)
-	if validationErr != "" {
-		c.JSON(400, gin.H{"message": validationErr})
-		return
-	}
+  validationErr := article.ValidateNewArticle(c)
+  if validationErr != nil {
+    c.JSON(400, gin.H{"message": validationErr.Error()})
+    return
+  }
 
-	userId := c.MustGet("userId").(int)
+  userId := c.MustGet("userId").(int)
 
-	articleId, idErr := strconv.Atoi(c.Param("id"))
-	if idErr != nil {
-		c.JSON(400, gin.H{"message": "Article id must be a number"})
-		return
-	}
+  articleId, idErr := strconv.Atoi(c.Param("id"))
+  if idErr != nil {
+    c.JSON(400, gin.H{"message": "Article id must be a number"})
+    return
+  }
 
-	imagePath := ""
-	if img := c.PostForm("ImagePath"); img != "" {
-		imagePath = img
-	} else {
-		resp, imgErr := article.SaveImage(c)
-		if imgErr != nil {
-			c.JSON(400, gin.H{"message": imgErr.Error()})
-			return
-		}
-		imagePath = resp
-	}
+  var reqData reqArticle
+  c.ShouldBindJSON(&reqData)
 
-	newArticle := article.NewArticle{
-		Text: c.PostForm("Text"),
-		Title: c.PostForm("Title"),
-		UserId: userId,
-		ArticleId: articleId,
-		Image: imagePath,
-	}
+  newArticle := article.NewArticle{
+    Text: reqData.Text,
+    Title: reqData.Title,
+    UserId: userId,
+    ArticleId: articleId,
+  }
 
-	articleUpdated, articleError := article.Update(&newArticle)
-	if !articleUpdated {
-		c.JSON(400, gin.H{"message": articleError})
-		return
-	}
+  articleUpdated, articleError := article.Update(&newArticle)
+  if !articleUpdated {
+    c.JSON(400, gin.H{"message": articleError})
+    return
+  }
 
-	c.Status(200)
+  c.Status(200)
 }
 
-func DeleteImage(c *gin.Context) {
-	articleId, idErr := strconv.Atoi(c.Param("id"))
-	if idErr != nil {
-		c.JSON(400, gin.H{"message": "Article id must be a number"})
-		return
-	}
-
-	userId := c.MustGet("userId").(int)
-
-	res, success := article.DeleteImage(articleId, userId)
-	if !success {
-		c.JSON(400, gin.H{"message": res})
-		return
-	}
-}
+// func DeleteImage(c *gin.Context) {
+//   articleId, idErr := strconv.Atoi(c.Param("id"))
+//   if idErr != nil {
+//     c.JSON(400, gin.H{"message": "Article id must be a number"})
+//     return
+//   }
+//
+//   userId := c.MustGet("userId").(int)
+//
+//   res, success := article.DeleteImage(articleId, userId)
+//   if !success {
+//     c.JSON(400, gin.H{"message": res})
+//     return
+//   }
+// }
 
 func GetUserArticlesPreview (c *gin.Context) {
   userId := c.MustGet("userId").(int)

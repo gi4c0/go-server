@@ -26,11 +26,10 @@ func init() {
   );
   CREATE TABLE if not exists test.Articles (
 	  ArticleId INT NOT NULL AUTO_INCREMENT,
-	  Text TEXT NOT NULL,
+	  Text LONGTEXT NOT NULL,
 	  Title VARCHAR(255) NOT NULL,
 	  UserId INT NOT NULL,
 	  Approved TINYINT(1) NULL DEFAULT 0,
-	  Image VARCHAR(255) NULL,
 	  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 	  Category VARCHAR(40) NOT NULL,
 	  PRIMARY KEY (ArticleId),

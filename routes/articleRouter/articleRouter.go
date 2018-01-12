@@ -23,7 +23,7 @@ func SetupRouter (router *gin.Engine) {
 	articleRouter.PATCH("/update/:id", middleware.RequireAuth(), userArticle.UpdateArticle)
 	articleRouter.PATCH("/approve/:id", middleware.RequireAdmin(), adminArticle.ApproveArticle)
 
-	articleRouter.DELETE("/image/:id", middleware.RequireAuth(), userArticle.DeleteImage)
+	// articleRouter.DELETE("/image/:id", middleware.RequireAuth(), userArticle.DeleteImage)
 
 	// Comment Router
 	commentRouter.GET("/:articleId", userComment.GetComments)
