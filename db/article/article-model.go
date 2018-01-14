@@ -32,8 +32,13 @@ type ArticlePreview struct {
   Username string
 }
 
-func Create (article *NewArticle) (bool, string) {
-	query := `INSERT INTO test.Articles (Text, Title, Category, UserId) VALUES (?, ?, "New", ?)`
+func Create (article *NewArticle, permission string) (bool, string) {
+  var query string
+  if permission == "user" {
+    query = `INSERT INTO test.Articles (Text, Title, Category, UserId) VALUES (?, ?, "New", ?)`
+  } else {
+    query = `INSERT INTO test.Articles (Text, Title, Category, UserId, Approved) VALUES (?, ?, "New", ?, 1)`
+  }
 
 	_, err := db.Con.Exec(query, article.Text, article.Title, article.UserId)
 	if err != nil {

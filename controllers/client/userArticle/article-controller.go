@@ -13,13 +13,8 @@ type reqArticle struct {
 }
 
 func CreateArticle(c *gin.Context) {
-  // validInputError := article.ValidateNewArticle(c)
-  // if validInputError != nil {
-  //   c.JSON(400, gin.H{"message": validInputError.Error()})
-  //   return
-  // }
-
   userId := c.MustGet("userId").(int)
+  permission := c.MustGet("permission").(string)
 
   var reqData reqArticle
   jsonErr := c.ShouldBindJSON(&reqData)
@@ -35,7 +30,7 @@ func CreateArticle(c *gin.Context) {
     UserId: userId,
   }
 
-  articleCreated, articleError := article.Create(&newArticle)
+  articleCreated, articleError := article.Create(&newArticle, permission)
   if !articleCreated {
     c.JSON(400, gin.H{"message": articleError})
     return
@@ -97,7 +92,11 @@ func UpdateArticle(c *gin.Context) {
   }
 
   var reqData reqArticle
-  c.ShouldBindJSON(&reqData)
+	jsonErr := c.ShouldBindJSON(&reqData)
+	if jsonErr != nil {
+		c.JSON(400, gin.H{"message": jsonErr.Error()})
+		return
+	}
 
   newArticle := article.NewArticle{
     Text: reqData.Text,

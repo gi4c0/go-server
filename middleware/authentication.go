@@ -22,9 +22,9 @@ func RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		userId := user.GetUserId(token)
+		userId, permission := user.GetUserId(token)
 		c.Set("userId", userId)
-    c.Set("permission", "user")
+    c.Set("permission", permission)
 	}
 }
 
@@ -45,7 +45,7 @@ func RequireModerator() gin.HandlerFunc {
 			return
 		}
 
-		userId := user.VerifyPermission(token, "moderator")
+		userId, permission := user.VerifyPermission(token, "moderator")
 		if userId < 1 {
 			c.JSON(403, gin.H{"message": "You don't have permissions enough"})
 			c.Abort()
@@ -53,7 +53,7 @@ func RequireModerator() gin.HandlerFunc {
 		}
 
 		c.Set("userId", userId)
-    c.Set("permission", "moderator")
+    c.Set("permission", permission)
 	}
 }
 
@@ -74,7 +74,7 @@ func RequireAdmin() gin.HandlerFunc {
 			return
 		}
 
-		userId := user.VerifyPermission(token, "admin")
+		userId, _ := user.VerifyPermission(token, "admin")
 		if userId < 1 {
 			c.JSON(403, gin.H{"message": "You don't have permissions enough"})
 			c.Abort()

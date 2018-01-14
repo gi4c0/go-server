@@ -112,26 +112,27 @@ func VerifyUser(user *User) *errorUser {
 	return nil
 }
 
-func GetUserId (token string) int {
+func GetUserId (token string) (int, string) {
 	validToken, username := VerifyToken(token)
 	if !validToken {
-		return -1
+		return -1, ""
 	}
 
 	var userId int
-	err := db.Con.QueryRow("SELECT UserId From test.Users WHERE Username = ?", username).Scan(&userId)
+  var permission string
+	err := db.Con.QueryRow("SELECT UserId, Permission From test.Users WHERE Username = ?", username).Scan(&userId, &permission)
 	if err != nil {
 		fmt.Println(err)
-		return -1
+		return -1, ""
 	}
 
-	return userId
+	return userId, permission
 }
 
-func VerifyPermission(token string, perm string) int {
+func VerifyPermission(token string, perm string) (int, string) {
 	validToken, username := VerifyToken(token)
 	if !validToken {
-		return -1
+		return -1, ""
 	}
 
 	var userId int
@@ -139,14 +140,14 @@ func VerifyPermission(token string, perm string) int {
 	err := db.Con.QueryRow("SELECT UserId, Permission From test.Users WHERE Username = ?", username).Scan(&userId, &permission)
 	if err != nil {
 		fmt.Println(err)
-		return -1
+		return -1, ""
 	}
 
   if permission != perm && permission != "admin" {
-    return -1
+    return -1, ""
   }
 
-	return userId
+	return userId, permission
 }
 
 func CheckUsername (username string) bool {
