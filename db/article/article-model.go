@@ -1,58 +1,54 @@
 package article
 
 import (
-	"go-server/db"
-	"github.com/go-sql-driver/mysql"
+	"errors"
 	"fmt"
+	"go-server/db"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type NewArticle struct {
 	ArticleId int
-	Text string
-	Title string
-	UserId int
+	Text      string
+	Title     string
+	UserId    int
 	CreatedAt string
-	Category string
+	Category  string
 }
 
 type FetchedArticle struct {
 	ArticleId int
-	Text string
-	Title string
-	Username string
-	Approved bool
+	Text      string
+	Title     string
+	Username  string
+	Approved  bool
 	CreatedAt string
-	Category string
+	Category  string
 }
 
 type ArticlePreview struct {
-  ArticleId int
-  Title string
-  Approved bool
-  Username string
+	ArticleId int
+	Title     string
+	Approved  bool
 }
 
-func Create (article *NewArticle, permission string) (bool, string) {
-  var query string
-  if permission == "user" {
-    query = `INSERT INTO test.Articles (Text, Title, Category, UserId) VALUES (?, ?, "New", ?)`
-  } else {
-    query = `INSERT INTO test.Articles (Text, Title, Category, UserId, Approved) VALUES (?, ?, "New", ?, 1)`
-  }
+func Create(article *NewArticle, permission string) error {
+	query := `INSERT INTO test.Articles (Text, Title, Category, UserId) VALUES (?, ?, "New", ?)`
 
 	_, err := db.Con.Exec(query, article.Text, article.Title, article.UserId)
 	if err != nil {
 		me, ok := err.(*mysql.MySQLError)
 		if ok && me.Number == 1062 {
-			return false, "This title already exists"
+			return errors.New("This title is already exists")
 		}
-		return false, err.Error()
+		return err
 	}
 
-	return true, ""
+	return nil
 }
 
-func GetAll (skip int, limit int) ([]FetchedArticle, error) {
+func GetAll(skip int, limit int) ([]FetchedArticle, error) {
 	var fetchedArticles []FetchedArticle
 
 	query := `
@@ -82,7 +78,7 @@ func GetAll (skip int, limit int) ([]FetchedArticle, error) {
 	return fetchedArticles, nil
 }
 
-func GetSingleArticle (articleId int) (FetchedArticle, error) {
+func GetSingleArticle(articleId int) (FetchedArticle, error) {
 	var fa FetchedArticle
 
 	query := `
@@ -99,7 +95,7 @@ func GetSingleArticle (articleId int) (FetchedArticle, error) {
 	return fa, nil
 }
 
-func Update (article *NewArticle) (bool, string) {
+func Update(article *NewArticle) (bool, string) {
 	query := "UPDATE test.Articles SET Text = ?, Title = ?, WHERE UserId = ? AND ArticleId = ?"
 
 	res, err := db.Con.Exec(query, article.Text, article.Title, article.UserId, article.ArticleId)
@@ -131,47 +127,47 @@ func Approve(articleId int) error {
 }
 
 func GetUnapproved() ([]ArticlePreview, error) {
-  var articles []ArticlePreview
-  res, err := db.Con.Query("SELECT Articles.ArticleId, Articles.Title, Users.Username FROM Articles JOIN Users on Articles.UserId = Users.UserId WHERE Articles.Approved = 0")
-  if err != nil {
-    fmt.Println(err)
-  }
+	var articles []ArticlePreview
+	res, err := db.Con.Query("SELECT ArticleId, Title FROM test.Articles WHERE Approved = 0")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-  for res.Next() {
-    var article ArticlePreview
+	for res.Next() {
+		var article ArticlePreview
 
-    scanErr := res.Scan(&article.ArticleId, &article.Title, &article.Username)
-    if scanErr != nil {
-      fmt.Println(scanErr)
-      return articles, scanErr
-    }
+		scanErr := res.Scan(&article.ArticleId, &article.Title)
+		if scanErr != nil {
+			fmt.Println(scanErr)
+			return articles, scanErr
+		}
 
-    articles = append(articles, article)
-  }
+		articles = append(articles, article)
+	}
 
-  return articles, nil
+	return articles, nil
 }
 
-func UserArticles (userId int) ([]ArticlePreview, error) {
-  var articles []ArticlePreview
+func UserArticles(userId int) ([]ArticlePreview, error) {
+	var articles []ArticlePreview
 
-  res, dbErr:= db.Con.Query("SELECT ArticleId, Title, Approved FROM test.Articles WHERE UserId = ?", userId)
-  if dbErr != nil {
-    fmt.Println(dbErr)
-    return articles, dbErr
-  }
+	res, dbErr := db.Con.Query("SELECT ArticleId, Title, Approved FROM test.Articles WHERE UserId = ?", userId)
+	if dbErr != nil {
+		fmt.Println(dbErr)
+		return articles, dbErr
+	}
 
-  for res.Next() {
-    var article ArticlePreview
+	for res.Next() {
+		var article ArticlePreview
 
-    scanErr := res.Scan(&article.ArticleId, &article.Title, &article.Approved)
-    if scanErr != nil {
-      fmt.Println(scanErr)
-      return articles, scanErr
-    }
+		scanErr := res.Scan(&article.ArticleId, &article.Title, &article.Approved)
+		if scanErr != nil {
+			fmt.Println(scanErr)
+			return articles, scanErr
+		}
 
-    articles = append(articles, article)
-  }
+		articles = append(articles, article)
+	}
 
-  return articles, nil
+	return articles, nil
 }

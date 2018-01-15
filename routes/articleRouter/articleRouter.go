@@ -1,14 +1,16 @@
 package articleRouter
 
 import (
-	"github.com/gin-gonic/gin"
-	"go-server/middleware"
 	"go-server/controllers/admin/adminArticle"
+	"go-server/controllers/admin/adminComment"
 	"go-server/controllers/client/userArticle"
-  "go-server/controllers/client/userComment"
+	"go-server/controllers/client/userComment"
+	"go-server/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter (router *gin.Engine) {
+func SetupRouter(router *gin.Engine) {
 	articleRouter := router.Group("/article")
 	commentRouter := articleRouter.Group("/comment")
 
@@ -16,7 +18,7 @@ func SetupRouter (router *gin.Engine) {
 	articleRouter.GET("/id/:id", userArticle.GetSingleArticle)
 	articleRouter.GET("/list/:page/:count", userArticle.GetArticles)
 	articleRouter.GET("/my", middleware.RequireAuth(), userArticle.GetUserArticlesPreview)
-  articleRouter.GET("/unapproved", middleware.RequireAdmin(), adminArticle.GetUnapproved)
+	articleRouter.GET("/unapproved", middleware.RequireAdmin(), adminArticle.GetUnapproved)
 
 	articleRouter.POST("/", middleware.RequireAuth(), userArticle.CreateArticle)
 
@@ -26,9 +28,11 @@ func SetupRouter (router *gin.Engine) {
 	// articleRouter.DELETE("/image/:id", middleware.RequireAuth(), userArticle.DeleteImage)
 
 	// Comment Router
-	commentRouter.GET("/:articleId", userComment.GetComments)
+	commentRouter.GET("/client/:articleId", userComment.GetComments)
+	commentRouter.GET("/admin/:articleId", userComment.GetComments)
 
-	commentRouter.POST("/:articleId", middleware.RequireAuth(), userComment.AddComment)
+	commentRouter.POST("/admin/:articleId", middleware.RequireAuth(), adminComment.AddComment)
+	commentRouter.POST("/client/:articleId", middleware.RequireAuth(), userComment.AddComment)
 
 	commentRouter.PATCH("/:commentId", middleware.RequireAuth(), userComment.UpdateComment)
 

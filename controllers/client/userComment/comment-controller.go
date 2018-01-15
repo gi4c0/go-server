@@ -1,9 +1,10 @@
 package userComment
 
 import (
-	"github.com/gin-gonic/gin"
 	"go-server/db/comment"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AddComment(c *gin.Context) {
@@ -17,7 +18,7 @@ func AddComment(c *gin.Context) {
 
 func DeleteComment(c *gin.Context) {
 	userId := c.MustGet("userId").(int)
-  userPermission := c.MustGet("permission").(string)
+	userPermission := c.MustGet("permission").(string)
 
 	commentId, parseErr := strconv.Atoi(c.Param("commentId"))
 	if parseErr != nil {
@@ -66,7 +67,7 @@ func GetComments(c *gin.Context) {
 		return
 	}
 
-	comments, err := comment.GetCommentsByArticleId(articleId)
+	comments, err := comment.GetCommentsByArticleId(articleId, "client")
 	if err != nil {
 		c.JSON(400, gin.H{"message": err.Error()})
 		return

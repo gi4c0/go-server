@@ -1,10 +1,10 @@
 package comment
 
 import (
+	"errors"
 	"fmt"
 	"go-server/db"
-  "strconv"
-  "errors"
+	"strconv"
 )
 
 type NewComment struct {
@@ -14,8 +14,8 @@ type NewComment struct {
 	ParentCommentId int
 	Text            string
 	CreatedAt       string
-	Username 		    string
-  Deleted         bool
+	Username        string
+	Deleted         bool
 }
 
 func (comment *NewComment) Save() {
@@ -34,13 +34,13 @@ func (comment *NewComment) Update() string {
 }
 
 func Delete(commentId int, userId int, permission string) error {
-  var query string
+	var query string
 
-  if permission == "user" {
-    query = "UPDATE test.Comments SET Deleted = 1 WHERE CommentId = ? AND UserId = " + strconv.Itoa(userId)
-  } else {
-    query = "UPDATE test.Comments SET Deleted = 1 WHERE CommentId = ?"
-  }
+	if permission == "user" {
+		query = "UPDATE test.Comments SET Deleted = 1 WHERE CommentId = ? AND UserId = " + strconv.Itoa(userId)
+	} else {
+		query = "UPDATE test.Comments SET Deleted = 1 WHERE CommentId = ?"
+	}
 
 	res, err := db.Con.Exec(query, commentId)
 	if err != nil {
@@ -59,11 +59,19 @@ func Delete(commentId int, userId int, permission string) error {
 	return nil
 }
 
-func GetCommentsByArticleId(articleId int) ([]NewComment, error) {
+func GetCommentsByArticleId(articleId int, commentType string) ([]NewComment, error) {
 	var comments []NewComment
-	query := `
-		SELECT CommentId, ArticleId, ParentCommentId, Text, CreatedAt, Username, Deleted
-		FROM test.Comments JOIN test.Users ON Comments.UserId = Users.UserId WHERE ArticleId = ?`
+	var query string
+
+	if commentType == "admin" {
+		query = `
+			SELECT CommentId, ArticleId, ParentCommentId, Text, CreatedAt, Username, Deleted
+			FROM test.AdminComments JOIN test.Users ON Comments.UserId = Users.UserId WHERE ArticleId = ?`
+	} else {
+		query = `
+			SELECT CommentId, ArticleId, ParentCommentId, Text, CreatedAt, Username, Deleted
+			FROM test.Comments JOIN test.Users ON Comments.UserId = Users.UserId WHERE ArticleId = ?`
+	}
 
 	res, err := db.Con.Query(query, articleId)
 	if err != nil {
@@ -82,4 +90,16 @@ func GetCommentsByArticleId(articleId int) ([]NewComment, error) {
 	}
 
 	return comments, nil
+}
+
+func (comment *NewComment) AddAdminComment() error {
+	query := "INSERT INTO test.AdminComments (ArticleId, UserId, Text) VALUES (?, ?, ?)"
+
+	_, err := db.Con.Exec(query, comment.ArticleId, comment.UserId, comment.Text)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 }
