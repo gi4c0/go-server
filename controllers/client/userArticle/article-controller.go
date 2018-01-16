@@ -25,8 +25,14 @@ func CreateArticle(c *gin.Context) {
 		return
 	}
 
+	articleWithImg, imgErr := article.SaveImage(&reqData.Text)
+	if imgErr != nil {
+		c.JSON(500, gin.H{"message": imgErr.Error()})
+		return
+	}
+
 	newArticle := article.NewArticle{
-		Text:   reqData.Text,
+		Text:   articleWithImg,
 		Title:  reqData.Title,
 		UserId: userId,
 	}

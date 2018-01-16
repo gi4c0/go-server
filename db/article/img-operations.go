@@ -1,29 +1,52 @@
 package article
 
 import (
-	"github.com/gin-gonic/gin"
+	"bytes"
+	"encoding/base64"
+	"errors"
 	"fmt"
-  "time"
-  "strconv"
+	"image/png"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
-func SaveImage (c *gin.Context) (string, error) {
-	imageFile, err := c.FormFile("ImageFile")
+// TODO: make with go routines
+func SaveImage(text *string) (string, error) {
+	timeStr := strconv.FormatInt(time.Now().UnixNano(), 10)
+	imagePath := "public/images/" + timeStr + "-image.png"
+	fmt.Println(imagePath)
+
+	var finishedArticle string
+	re := regexp.MustCompile(`src\s*=\s*"data:image/(\w{3});base64,(.+?)"`)
+
+	image := re.FindStringSubmatch(*text)
+	if len(image) == 0 {
+		return *text, nil
+	}
+
+	base64Str := image[2]
+	unbased, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
-		fmt.Println(err)
-		return "", nil
+		return "", errors.New("Cannot decode base64 to img")
 	}
 
-  timeStr := strconv.FormatInt(time.Now().Unix(), 10)
-
-	imagePath := "public/images/" + imageFile.Filename + "-" + timeStr
-
-	if saveErr := c.SaveUploadedFile(imageFile, imagePath); saveErr != nil {
-    fmt.Println(saveErr.Error())
-		return "", saveErr
+	r := bytes.NewReader(unbased)
+	img, imgErr := png.Decode(r)
+	if imgErr != nil {
+		return "", imgErr
 	}
 
-  imagePath = "/" + imagePath // to store in db right adress
+	f, fileErr := os.Create(imagePath)
+	if fileErr != nil {
+		return "", fileErr
+	}
 
-	return imagePath, nil
+	png.Encode(f, img)
+	savedImagePath := "src=\"/" + imagePath + "\""
+	finishedArticle = strings.Replace(*text, image[0], savedImagePath, 1)
+
+	return SaveImage(&finishedArticle)
 }
