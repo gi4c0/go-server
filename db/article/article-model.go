@@ -31,6 +31,7 @@ type ArticlePreview struct {
 	ArticleId int
 	Title     string
 	Approved  bool
+	Username  string
 }
 
 func Create(article *NewArticle, permission string) error {
@@ -128,15 +129,16 @@ func Approve(articleId int) error {
 
 func GetUnapproved() ([]ArticlePreview, error) {
 	var articles []ArticlePreview
-	res, err := db.Con.Query("SELECT ArticleId, Title FROM test.Articles WHERE Approved = 0")
+	res, err := db.Con.Query("SELECT Articles.ArticleId, Articles.Title, Users.Username FROM test.Articles JOIN test.Users ON Articles.UserId = Users.UserId WHERE Approved = 0")
 	if err != nil {
 		fmt.Println(err)
+		return articles, err
 	}
 
 	for res.Next() {
 		var article ArticlePreview
 
-		scanErr := res.Scan(&article.ArticleId, &article.Title)
+		scanErr := res.Scan(&article.ArticleId, &article.Title, &article.Username)
 		if scanErr != nil {
 			fmt.Println(scanErr)
 			return articles, scanErr
